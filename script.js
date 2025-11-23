@@ -1,9 +1,12 @@
-let btn = document.querySelector("#btn")
-let content = document.querySelector("#content")
-let voice = document.querySelector("#voice")
+let btn = document.querySelector("#btn");
+let content = document.querySelector("#content");
+let voice = document.querySelector("#voice");
 
 
-function speak(talk) {        //This creates a function called speak that takes one input (called talk), which is the text you want to read aloud.           
+function speak(talk) {   
+    if (speech) speech.stop();  //  stop listening before speaking
+    window.speechSynthesis.cancel();     //This creates a function called speak that takes one input (called talk), which is the text you want to read aloud.           
+
     let text = new SpeechSynthesisUtterance(talk)      //It uses the text you gave (talk) to make the computer voice say it.
     text.rate = 1               //normal speaking speed.
     text.volume = 1             //full volume
@@ -29,18 +32,21 @@ function wish() {
 window.addEventListener("load", () => {
     wish()
 })
+let speech; 
 let recognition = window.SpeechRecognition || window.webkitSpeechRecognition
 if (recognition) {
-    let speech = new recognition()
+   speech= new recognition();
     speech.lang = "en-GB";
+
     speech.onresult = (event) => {
-        let transcript = event.results[0][0].transcript
-        console.log("User said", transcript)
+        let transcript = event.results[0][0].transcript;
+        console.log("User said", transcript);
         // content.textContent = transcript;   not render (ui) 
-        takeCommand(transcript.toLowerCase())
+        takeCommand(transcript.toLowerCase());
 
     }
     btn.addEventListener("click", () => {
+        window.speechSynthesis.cancel(); // stop speaking before listening
         speech.start()
         btn.style.display = "none"         //hide button while listening
         voice.style.display = "block"   //show GIF
@@ -57,7 +63,10 @@ if (recognition) {
 } else {
     alert("Speech Recognition not supported in this browser.");
 }
+
 function takeCommand(msg) {
+    if(speech) speech.stop();   // stop listening immediately
+    window.speechSynthesis.cancel();
     if (msg.includes("hi nova") || msg.includes("hii") ||msg.includes("hii")|| msg.includes("hello")) {
         speak("Hi! How can I help you?");
     }
@@ -92,39 +101,42 @@ function takeCommand(msg) {
         speak("opening facebook...")
         window.open("https://facebook.com/");
     }
-    else if(msg.includes("thank you")|| ("thank you nova")){
-        speak("“You’re welcome! Let me know if you need anything else.”")
+    else if(msg.includes("thank you")|| msg.includes ("thank you nova")){
+        speak("You're welcome! Let me know if you need anything else.")
     }
 
      else if (msg.includes("open calculator")) {
         speak("opening calculator...")
         window.open("calculator://");
     }
-    else if(msg.includes(console.error())){
-        speak("I did not understand. Please try again.");
-    } 
-    else if(msg.includes("time") ||  msg.includes("what's the time") ||
-    msg.includes("tell me the time") ||
-    msg.includes("current time")){
+   
+    else if(msg.includes("time") || 
+        msg.includes("what's the time") ||
+        msg.includes("tell me the time") ||
+        msg.includes("current time")){
         let time= new Date().toLocaleString(undefined,{hour:"numeric", minute:"numeric"})
-        speak(`it's${time}`)
+        speak(`it's ${time}`)
     }
      else if(msg.includes("date")||  msg.includes("what's the date") ||
     msg.includes("tell me the date") || msg.includes("current date")){
         let date= new Date().toLocaleString(undefined,{day:"numeric", month:"short"})
         speak(date)
     }
-   else {
-    let final = msg.replace(/nova/gi, "").replace(/innova/gi, "").replace(/tell me about/gi, "").replace(/who is/gi, "").replace(/open/gi,"")
-   
-; // removes both Nova and Innova (case-insensitive)
-    speak(`This is what I found on the internet regarding ${final.trim()}`);
-    window.open(`https://www.google.com/search?q=${final.trim()}`);
-}
+     else {
+        let final = msg
+            .replace(/nova/gi, "")
+            .replace(/innova/gi, "")
+            .replace(/tell me about/gi, "")
+            .replace(/who is/gi, "")
+            .replace(/open/gi, "")
+            .trim();
 
-///nova/gi → “g” = replace all, “i” = ignore case
-//.replace(...).replace(...) → ensures both “Nova” and “Innova” get removed
-//.trim() → cleans up extra spaces//
+        if (final.length > 0) {
+            speak(`This is what I found regarding ${final}`);
+            window.open(`https://www.google.com/search?q=${final}`);
+        } else {
+            speak("I did not understand. Please try again.");
+        }
+    }
 }
-
 
